@@ -52,6 +52,12 @@ Once activated, the plugin will remove the ability to subscribe to comment feeds
 
 == Changelog ==
 
+= 1.1.0 =
+* New: Introduced a user-friendly settings page to easily toggle the Comments RSS Feed on or off. You can now find this option under Settings > Comment Feeds in your WordPress admin.
+* Improved: Enhanced logic to more robustly remove comments feed links from the <head> section of your website, including those added by themes or other plugins that might bypass standard WordPress functions.
+* Improved: By default, the comments RSS feed remains disabled upon plugin activation, consistent with previous versions, but now provides the option to re-enable it.
+* Fix: Refactored the plugin into an object-oriented programming (OOP) structure for better organization, maintainability, and to prevent conflicts with other plugins.
+* Fix: Proper escaping for output, security checks to prevent direct file access, and using appropriate hooks and filters.
 
 == Upgrade Notice ==
 
