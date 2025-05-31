@@ -1,5 +1,7 @@
 # bloglogistics-remove-comment-feed
-=== BlogLogistics LLM Generator === Contributors: rogerwheatley
+
+=== BlogLogistics LLM Generator ===
+Contributors: rogerwheatley
 Tags: comments, feed, rss, wordpress
 Requires at least: 6.8
 Tested up to: 6.8.1
