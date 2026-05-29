@@ -1,175 +1,385 @@
 <?php
 /**
- * Plugin Name: BlogLogistics Comment Feed Control
- * Plugin URI: https://www.bloglogistics.com
- * Description: Control the display and availability of comments RSS feeds on your WordPress website.
- * Version: 1.1.0
- * Author: Roger Wheatley
- * License: GPLv2 or later
+ * Plugin Name:       BlogLogistics Remove Comment Feed
+ * Plugin URI:        https://github.com/bloglogisticsdev/bloglogistics-remove-comment-feed
+ * Description:       Removes comment feed links and blocks direct access to WordPress comment feed URLs while leaving normal post feeds available.
+ * Version:           1.2.0
+ * Requires at least: 7.0
+ * Requires PHP:      8.3
+ * Author:            BlogLogistics
+ * Author URI:        https://www.bloglogistics.com/
+ * License:           GPL-3.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-3.0.html
+ * Update URI:        https://github.com/bloglogisticsdev/bloglogistics-remove-comment-feed
+ * Text Domain:       bloglogistics-remove-comment-feed
  */
 
-// Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+	exit;
 }
 
-/**
- * Class BlogLogistics_Comment_Feed_Control
- *
- * Manages the disabling and enabling of WordPress comment RSS feeds.
- */
-class BlogLogistics_Comment_Feed_Control {
+define( 'BLOGLOGISTICS_RCF_VERSION', '1.2.0' );
+define( 'BLOGLOGISTICS_RCF_SLUG', 'bloglogistics-remove-comment-feed' );
+define( 'BLOGLOGISTICS_RCF_FILE', __FILE__ );
+define( 'BLOGLOGISTICS_RCF_DIR', plugin_dir_path( __FILE__ ) );
+define( 'BLOGLOGISTICS_RCF_REPO_URL', 'https://github.com/bloglogisticsdev/bloglogistics-remove-comment-feed/' );
+define( 'BLOGLOGISTICS_RCF_UPDATE_MANIFEST_URL', 'https://updates.bloglogistics.com/plugins/bloglogistics-remove-comment-feed.json' );
 
-    /**
-     * Constructor.
-     *
-     * Initializes the plugin by setting up hooks.
-     */
-    public function __construct() {
-        add_action( 'admin_init', array( $this, 'register_settings' ) );
-        add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+$bloglogistics_rcf_puc = BLOGLOGISTICS_RCF_DIR . 'vendor/plugin-update-checker/plugin-update-checker.php';
 
-        if ( $this->is_comments_feed_disabled() ) {
-            add_action( 'do_feed_rss2_comments', array( $this, 'disable_comments_feed_display' ), 1 );
-            add_action( 'do_feed_atom_comments', array( $this, 'disable_comments_feed_display' ), 1 );
-            add_action( 'wp_head', array( $this, 'remove_comments_feed_links' ), 3 ); // Lower priority to ensure it runs after other plugins/themes.
-            add_action( 'template_redirect', array( $this, 'buffer_and_remove_feed_link_from_output' ) );
-        }
-    }
+if ( file_exists( $bloglogistics_rcf_puc ) ) {
+	if ( ! class_exists( '\\YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory', false ) ) {
+		require_once $bloglogistics_rcf_puc;
+	}
 
-    /**
-     * Check if the comments feed is set to be disabled.
-     *
-     * @return bool True if comments feed should be disabled, false otherwise.
-     */
-    private function is_comments_feed_disabled() {
-        return (bool) get_option( 'bloglogistics_disable_comments_feed', true ); // Default to true for backward compatibility.
-    }
+	require_once BLOGLOGISTICS_RCF_DIR . 'includes/class-bloglogistics-remove-comment-feed-updater.php';
 
-    /**
-     * Register plugin settings.
-     */
-    public function register_settings() {
-        register_setting(
-            'bloglogistics_comment_feed_options', // Option group
-            'bloglogistics_disable_comments_feed', // Option name
-            array(
-                'type'              => 'boolean',
-                'sanitize_callback' => 'rest_sanitize_boolean',
-                'default'           => true,
-                'show_in_rest'      => false,
-            )
-        );
-
-        add_settings_section(
-            'bloglogistics_comment_feed_section', // ID
-            esc_html__( 'Comment Feed Settings', 'bloglogistics-comment-feed' ), // Title
-            null, // Callback
-            'bloglogistics_comment_feed' // Page
-        );
-
-        add_settings_field(
-            'bloglogistics_disable_comments_feed_field', // ID
-            esc_html__( 'Disable Comment RSS Feed', 'bloglogistics-comment-feed' ), // Title
-            array( $this, 'disable_comments_feed_callback' ), // Callback
-            'bloglogistics_comment_feed', // Page
-            'bloglogistics_comment_feed_section' // Section
-        );
-    }
-
-    /**
-     * Callback for the "Disable Comment RSS Feed" setting field.
-     */
-    public function disable_comments_feed_callback() {
-        $disabled = $this->is_comments_feed_disabled();
-        ?>
-        <label for="bloglogistics_disable_comments_feed">
-            <input type="checkbox" id="bloglogistics_disable_comments_feed" name="bloglogistics_disable_comments_feed" value="1" <?php checked( $disabled, true ); ?> />
-            <?php esc_html_e( 'Check this box to disable all comments RSS feeds and their links.', 'bloglogistics-comment-feed' ); ?>
-        </label>
-        <?php
-    }
-
-    /**
-     * Add admin menu page.
-     */
-    public function add_admin_menu() {
-        add_options_page(
-            esc_html__( 'Comment Feed Control', 'bloglogistics-comment-feed' ), // Page title
-            esc_html__( 'Comment Feeds', 'bloglogistics-comment-feed' ), // Menu title
-            'manage_options', // Capability required to access
-            'bloglogistics_comment_feed', // Menu slug
-            array( $this, 'settings_page_content' ) // Callback function to render the page
-        );
-    }
-
-    /**
-     * Render the settings page content.
-     */
-    public function settings_page_content() {
-        ?>
-        <div class="wrap">
-            <h1><?php esc_html_e( 'BlogLogistics Comment Feed Control', 'bloglogistics-comment-feed' ); ?></h1>
-            <form method="post" action="options.php">
-                <?php
-                settings_fields( 'bloglogistics_comment_feed_options' );
-                do_settings_sections( 'bloglogistics_comment_feed' );
-                submit_button();
-                ?>
-            </form>
-        </div>
-        <?php
-    }
-
-    /**
-     * Display a custom message instead of the RSS Feeds for comments.
-     *
-     * @return void
-     */
-    public function disable_comments_feed_display() {
-        wp_die(
-            sprintf(
-                /* translators: %1$s: opening anchor tag, %2$s: closing anchor tag */
-                esc_html__( 'Comments feed not available, please visit the %1$shomepage%2$s!', 'bloglogistics-comment-feed' ),
-                '<a href="' . esc_url( home_url( '/' ) ) . '">',
-                '</a>'
-            ),
-            esc_html__( 'Comments Feed Disabled', 'bloglogistics-comment-feed' ),
-            array( 'response' => 200 ) // Send 200 OK status to avoid issues with crawlers.
-        );
-    }
-
-    /**
-     * Remove links to comments feed from the header.
-     *
-     * This targets the standard WordPress `feed_links_extra` output.
-     */
-    public function remove_comments_feed_links() {
-        remove_action( 'wp_head', 'feed_links_extra', 3 );
-        // Also remove if theme adds it via `feed_links` (less common for comment feeds).
-        remove_action( 'wp_head', 'feed_links', 2 );
-    }
-
-    /**
-     * Buffers output to remove comments feed link from WP head for themes that add it
-     * outside the standard WP function or after initial `wp_head` actions.
-     */
-    public function buffer_and_remove_feed_link_from_output() {
-        ob_start( array( $this, 'filter_output_for_feed_link' ) );
-    }
-
-    /**
-     * Callback for `ob_start` to filter the output and remove comment feed links.
-     *
-     * @param string $output The output buffer content.
-     * @return string The filtered output.
-     */
-    public function filter_output_for_feed_link( $output ) {
-        // Regex to match various comment feed link formats.
-        $regex = '/<link\s+rel=[\'"]alternate[\'"]\s+type=[\'"]application\/rss\+xml[\'"]\s+title=[\'"][^\'"]*(Comments|Comment)\s+Feed[\'"]\s+href=[\'"][^\'"]*\/comments\/feed\/[\'"]\s*\/?>/i';
-        return preg_replace( $regex, '', $output );
-    }
+	if ( class_exists( 'BlogLogistics_Remove_Comment_Feed_Updater', false ) ) {
+		BlogLogistics_Remove_Comment_Feed_Updater::init(
+			array(
+				'repo_url'    => BLOGLOGISTICS_RCF_UPDATE_MANIFEST_URL,
+				'plugin_file' => BLOGLOGISTICS_RCF_FILE,
+				'slug'        => BLOGLOGISTICS_RCF_SLUG,
+			)
+		);
+	}
 }
 
-// Instantiate the plugin class.
-new BlogLogistics_Comment_Feed_Control();
+if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
+
+	/**
+	 * Remove comment feeds and provide a small settings UI.
+	 */
+	final class BlogLogistics_Remove_Comment_Feed {
+
+		private const OPTION_NAME = 'bloglogistics_rcf_options';
+
+		private const DEFAULT_MESSAGE = 'Comment feeds are not available on this website.';
+
+		/**
+		 * Whether wp_head output buffering is currently active.
+		 *
+		 * @var bool
+		 */
+		private bool $head_buffering = false;
+
+		/**
+		 * Register hooks.
+		 */
+		public function __construct() {
+			add_action( 'admin_init', array( $this, 'register_settings' ) );
+			add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+			add_action( 'admin_post_bloglogistics_rcf_reset_message', array( $this, 'handle_reset_message' ) );
+
+			if ( ! $this->is_enabled() ) {
+				return;
+			}
+
+			add_filter( 'feed_links_show_comments_feed', '__return_false' );
+
+			add_action( 'do_feed_rss2_comments', array( $this, 'block_comment_feed' ), 1 );
+			add_action( 'do_feed_atom_comments', array( $this, 'block_comment_feed' ), 1 );
+			add_action( 'template_redirect', array( $this, 'maybe_block_comment_feed_request' ), 0 );
+
+			add_action( 'wp_head', array( $this, 'start_wp_head_buffer' ), 0 );
+			add_action( 'wp_head', array( $this, 'end_wp_head_buffer' ), PHP_INT_MAX );
+		}
+
+		/**
+		 * Default option values.
+		 *
+		 * @return array<string, mixed>
+		 */
+		private function defaults(): array {
+			return array(
+				'enabled' => true,
+				'message' => self::DEFAULT_MESSAGE,
+			);
+		}
+
+		/**
+		 * Get plugin options merged with defaults.
+		 *
+		 * @return array<string, mixed>
+		 */
+		private function get_options(): array {
+			$options = get_option( self::OPTION_NAME, array() );
+
+			if ( ! is_array( $options ) ) {
+				$options = array();
+			}
+
+			return wp_parse_args( $options, $this->defaults() );
+		}
+
+		/**
+		 * Whether comment feeds should be disabled.
+		 */
+		private function is_enabled(): bool {
+			$options = $this->get_options();
+			return ! empty( $options['enabled'] );
+		}
+
+		/**
+		 * Message shown to visitors who directly open a blocked comment feed URL.
+		 */
+		private function get_block_message(): string {
+			$options = $this->get_options();
+			$message = isset( $options['message'] ) ? (string) $options['message'] : '';
+			$message = trim( $message );
+
+			return '' !== $message ? $message : self::DEFAULT_MESSAGE;
+		}
+
+		/**
+		 * Register settings.
+		 */
+		public function register_settings(): void {
+			register_setting(
+				'bloglogistics_rcf_options',
+				self::OPTION_NAME,
+				array(
+					'type'              => 'array',
+					'sanitize_callback' => array( $this, 'sanitize_options' ),
+					'default'           => $this->defaults(),
+					'show_in_rest'      => false,
+				)
+			);
+
+			add_settings_section(
+				'bloglogistics_rcf_main_section',
+				esc_html__( 'Comment Feed Settings', 'bloglogistics-remove-comment-feed' ),
+				array( $this, 'render_section_description' ),
+				'bloglogistics_rcf'
+			);
+
+			add_settings_field(
+				'bloglogistics_rcf_enabled',
+				esc_html__( 'Disable comment feeds', 'bloglogistics-remove-comment-feed' ),
+				array( $this, 'render_enabled_field' ),
+				'bloglogistics_rcf',
+				'bloglogistics_rcf_main_section'
+			);
+
+			add_settings_field(
+				'bloglogistics_rcf_message',
+				esc_html__( 'Message shown for blocked comment feeds', 'bloglogistics-remove-comment-feed' ),
+				array( $this, 'render_message_field' ),
+				'bloglogistics_rcf',
+				'bloglogistics_rcf_main_section'
+			);
+		}
+
+		/**
+		 * Sanitize saved options.
+		 *
+		 * @param mixed $input Raw option input.
+		 * @return array<string, mixed>
+		 */
+		public function sanitize_options( $input ): array {
+			$input = is_array( $input ) ? $input : array();
+
+			$message = isset( $input['message'] ) ? sanitize_textarea_field( wp_unslash( $input['message'] ) ) : self::DEFAULT_MESSAGE;
+			$message = trim( $message );
+
+			return array(
+				'enabled' => ! empty( $input['enabled'] ),
+				'message' => '' !== $message ? $message : self::DEFAULT_MESSAGE,
+			);
+		}
+
+		/**
+		 * Add settings page.
+		 */
+		public function add_admin_menu(): void {
+			add_options_page(
+				esc_html__( 'BlogLogistics Remove Comment Feed', 'bloglogistics-remove-comment-feed' ),
+				esc_html__( 'Remove Comment Feed', 'bloglogistics-remove-comment-feed' ),
+				'manage_options',
+				'bloglogistics-remove-comment-feed',
+				array( $this, 'render_settings_page' )
+			);
+		}
+
+		/**
+		 * Settings section description.
+		 */
+		public function render_section_description(): void {
+			echo '<p>' . esc_html__( 'Remove comment feed links from your site and block direct access to comment feed URLs. Normal post feeds are not affected.', 'bloglogistics-remove-comment-feed' ) . '</p>';
+		}
+
+		/**
+		 * Render checkbox field.
+		 */
+		public function render_enabled_field(): void {
+			$options = $this->get_options();
+			?>
+			<label for="bloglogistics_rcf_enabled">
+				<input type="checkbox" id="bloglogistics_rcf_enabled" name="<?php echo esc_attr( self::OPTION_NAME ); ?>[enabled]" value="1" <?php checked( ! empty( $options['enabled'] ) ); ?> />
+				<?php esc_html_e( 'Stop visitors and bots from accessing comment RSS/Atom feeds.', 'bloglogistics-remove-comment-feed' ); ?>
+			</label>
+			<?php
+		}
+
+		/**
+		 * Render message field.
+		 */
+		public function render_message_field(): void {
+			$options = $this->get_options();
+			$message = isset( $options['message'] ) ? (string) $options['message'] : self::DEFAULT_MESSAGE;
+			?>
+			<textarea id="bloglogistics_rcf_message" name="<?php echo esc_attr( self::OPTION_NAME ); ?>[message]" rows="4" cols="70" class="large-text"><?php echo esc_textarea( $message ); ?></textarea>
+			<p class="description">
+				<?php esc_html_e( 'This message is shown only if someone manually visits a comment feed URL, such as /comments/feed/. It does not create a page and it does not add any new links to your site.', 'bloglogistics-remove-comment-feed' ); ?>
+			</p>
+			<?php
+		}
+
+		/**
+		 * Render settings page.
+		 */
+		public function render_settings_page(): void {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				return;
+			}
+			?>
+			<div class="wrap">
+				<h1><?php esc_html_e( 'BlogLogistics Remove Comment Feed', 'bloglogistics-remove-comment-feed' ); ?></h1>
+
+				<form method="post" action="options.php">
+					<?php
+					settings_fields( 'bloglogistics_rcf_options' );
+					do_settings_sections( 'bloglogistics_rcf' );
+					submit_button();
+					?>
+				</form>
+
+				<hr />
+
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="bloglogistics_rcf_reset_message" />
+					<?php wp_nonce_field( 'bloglogistics_rcf_reset_message' ); ?>
+					<?php submit_button( esc_html__( 'Reset message to default', 'bloglogistics-remove-comment-feed' ), 'secondary', 'submit', false ); ?>
+					<p class="description">
+						<?php esc_html_e( 'Restores the default message shown when someone visits a blocked comment feed URL.', 'bloglogistics-remove-comment-feed' ); ?>
+					</p>
+				</form>
+			</div>
+			<?php
+		}
+
+		/**
+		 * Reset the blocked-feed message to the default.
+		 */
+		public function handle_reset_message(): void {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have permission to access this page.', 'bloglogistics-remove-comment-feed' ) );
+			}
+
+			check_admin_referer( 'bloglogistics_rcf_reset_message' );
+
+			$options = $this->get_options();
+			$options['message'] = self::DEFAULT_MESSAGE;
+			update_option( self::OPTION_NAME, $options );
+
+			wp_safe_redirect( add_query_arg( 'settings-updated', 'true', admin_url( 'options-general.php?page=bloglogistics-remove-comment-feed' ) ) );
+			exit;
+		}
+
+		/**
+		 * Block direct comment feed requests caught by WordPress feed actions.
+		 */
+		public function block_comment_feed(): void {
+			$message_html = wpautop( esc_html( $this->get_block_message() ) );
+
+			wp_die(
+				$message_html,
+				esc_html__( 'Comment Feed Disabled', 'bloglogistics-remove-comment-feed' ),
+				array(
+					'response' => 404,
+				)
+			);
+		}
+
+		/**
+		 * Block direct comment feed requests caught during the main request.
+		 */
+		public function maybe_block_comment_feed_request(): void {
+			if ( $this->is_comment_feed_request() ) {
+				$this->block_comment_feed();
+			}
+		}
+
+		/**
+		 * Determine whether the current request is for a comment feed.
+		 */
+		private function is_comment_feed_request(): bool {
+			if ( function_exists( 'is_comment_feed' ) && is_comment_feed() ) {
+				return true;
+			}
+
+			if ( function_exists( 'is_feed' ) && is_feed() ) {
+				$withcomments = get_query_var( 'withcomments' );
+
+				if ( ! empty( $withcomments ) ) {
+					return true;
+				}
+			}
+
+			$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+
+			if ( '' === $request_uri ) {
+				return false;
+			}
+
+			return (bool) preg_match( '#/comments/feed(?:/|$|\?)#i', $request_uri );
+		}
+
+		/**
+		 * Start a small buffer around wp_head so only comment feed links are removed.
+		 */
+		public function start_wp_head_buffer(): void {
+			if ( $this->head_buffering ) {
+				return;
+			}
+
+			$this->head_buffering = true;
+			ob_start();
+		}
+
+		/**
+		 * End the wp_head buffer and remove comment feed links.
+		 */
+		public function end_wp_head_buffer(): void {
+			if ( ! $this->head_buffering ) {
+				return;
+			}
+
+			$this->head_buffering = false;
+			$output = ob_get_clean();
+
+			if ( false === $output ) {
+				return;
+			}
+
+			echo $this->remove_comment_feed_links_from_html( $output ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		}
+
+		/**
+		 * Remove comment feed alternate links from a chunk of HTML.
+		 *
+		 * @param string $html HTML output.
+		 */
+		private function remove_comment_feed_links_from_html( string $html ): string {
+			$patterns = array(
+				'#<link\b[^>]*rel=["\']alternate["\'][^>]*href=["\'][^"\']*/comments/feed/?[^"\']*["\'][^>]*>\s*#i',
+				'#<link\b[^>]*href=["\'][^"\']*/comments/feed/?[^"\']*["\'][^>]*rel=["\']alternate["\'][^>]*>\s*#i',
+				'#<link\b[^>]*title=["\'][^"\']*comments?\s+feed[^"\']*["\'][^>]*>\s*#i',
+			);
+
+			return (string) preg_replace( $patterns, '', $html );
+		}
+	}
+}
+
+new BlogLogistics_Remove_Comment_Feed();
