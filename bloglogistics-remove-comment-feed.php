@@ -3,7 +3,7 @@
  * Plugin Name:       BlogLogistics Remove Comment Feed
  * Plugin URI:        https://github.com/bloglogisticsdev/bloglogistics-remove-comment-feed
  * Description:       Removes comment feed links and blocks direct access to WordPress comment feed URLs while leaving normal post feeds available.
- * Version:           1.2.1
+ * Version:           1.2.2
  * Requires at least: 7.0
  * Requires PHP:      8.3
  * Author:            BlogLogistics
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BLOGLOGISTICS_RCF_VERSION', '1.2.1' );
+define( 'BLOGLOGISTICS_RCF_VERSION', '1.2.2' );
 define( 'BLOGLOGISTICS_RCF_SLUG', 'bloglogistics-remove-comment-feed' );
 define( 'BLOGLOGISTICS_RCF_FILE', __FILE__ );
 define( 'BLOGLOGISTICS_RCF_DIR', plugin_dir_path( __FILE__ ) );
@@ -189,16 +189,72 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 		}
 
 		/**
-		 * Add settings page.
+		 * Add the BlogLogistics admin menu and this plugin's settings page.
 		 */
 		public function add_admin_menu(): void {
-			add_options_page(
+			$this->register_bloglogistics_parent_menu();
+
+			add_submenu_page(
+				'bloglogistics',
 				esc_html__( 'BlogLogistics Remove Comment Feed', 'bloglogistics-remove-comment-feed' ),
 				esc_html__( 'Remove Comment Feed', 'bloglogistics-remove-comment-feed' ),
 				'manage_options',
 				'bloglogistics-remove-comment-feed',
 				array( $this, 'render_settings_page' )
 			);
+		}
+
+		/**
+		 * Register the shared BlogLogistics parent menu if another BlogLogistics plugin has not already done so.
+		 */
+		private function register_bloglogistics_parent_menu(): void {
+			if ( $this->bloglogistics_parent_menu_exists() ) {
+				return;
+			}
+
+			add_menu_page(
+				esc_html__( 'BlogLogistics', 'bloglogistics-remove-comment-feed' ),
+				esc_html__( 'BlogLogistics', 'bloglogistics-remove-comment-feed' ),
+				'manage_options',
+				'bloglogistics',
+				array( $this, 'render_bloglogistics_parent_page' ),
+				'dashicons-rss',
+				58
+			);
+		}
+
+		/**
+		 * Check whether the shared BlogLogistics parent menu already exists.
+		 */
+		private function bloglogistics_parent_menu_exists(): bool {
+			global $menu;
+
+			if ( ! is_array( $menu ) ) {
+				return false;
+			}
+
+			foreach ( $menu as $menu_item ) {
+				if ( isset( $menu_item[2] ) && 'bloglogistics' === $menu_item[2] ) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		/**
+		 * Render the shared BlogLogistics parent menu page.
+		 */
+		public function render_bloglogistics_parent_page(): void {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				return;
+			}
+			?>
+			<div class="wrap">
+				<h1><?php esc_html_e( 'BlogLogistics', 'bloglogistics-remove-comment-feed' ); ?></h1>
+				<p><?php esc_html_e( 'Use the BlogLogistics submenu items to manage installed BlogLogistics plugins.', 'bloglogistics-remove-comment-feed' ); ?></p>
+			</div>
+			<?php
 		}
 
 		/**
@@ -282,7 +338,7 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 			$options['message'] = self::DEFAULT_MESSAGE;
 			update_option( self::OPTION_NAME, $options );
 
-			wp_safe_redirect( add_query_arg( 'settings-updated', 'true', admin_url( 'options-general.php?page=bloglogistics-remove-comment-feed' ) ) );
+			wp_safe_redirect( add_query_arg( 'settings-updated', 'true', admin_url( 'admin.php?page=bloglogistics-remove-comment-feed' ) ) );
 			exit;
 		}
 

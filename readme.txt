@@ -4,7 +4,7 @@ Tags: comments, feeds, rss, atom, privacy
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -31,10 +31,14 @@ The plugin does not create public pages and does not add replacement links to th
 
 1. Upload the plugin folder to `/wp-content/plugins/` or install the ZIP through WordPress.
 2. Activate the plugin.
-3. Go to Settings > Remove Comment Feed.
+3. Go to BlogLogistics > Remove Comment Feed.
 4. Confirm that comment feeds are disabled and customize the blocked-feed message if needed.
 
 == Changelog ==
+
+= 1.2.2 =
+* Move settings from Settings > Remove Comment Feed to BlogLogistics > Remove Comment Feed.
+* Add the shared BlogLogistics wp-admin parent menu with the RSS-style icon.
 
 = 1.2.1 =
 * Add automated release ZIP and update manifest workflow.
@@ -43,7 +47,7 @@ The plugin does not create public pages and does not add replacement links to th
 * Modernize plugin for the BlogLogistics plugin system.
 * Add the BlogLogistics manifest-based updater.
 * Add automated GitHub Actions release ZIP and manifest upload workflow.
-* Add a clear wp-admin settings page under Settings > Remove Comment Feed.
+* Add a clear wp-admin settings page under BlogLogistics > Remove Comment Feed.
 * Add a customizable message for blocked comment feed URLs.
 * Add a reset button for restoring the default blocked-feed message.
 * Remove comment feed links from wp_head without disabling normal post feeds.
