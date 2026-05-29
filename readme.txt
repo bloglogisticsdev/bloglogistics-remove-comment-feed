@@ -4,7 +4,7 @@ Tags: comments, feeds, rss, atom, privacy
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -35,6 +35,9 @@ The plugin does not create public pages and does not add replacement links to th
 4. Confirm that comment feeds are disabled and customize the blocked-feed message if needed.
 
 == Changelog ==
+
+= 1.2.1 =
+* Add automated release ZIP and update manifest workflow.
 
 = 1.2.0 =
 * Modernize plugin for the BlogLogistics plugin system.
