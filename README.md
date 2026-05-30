@@ -26,6 +26,11 @@ The plugin does not create public pages and does not add replacement links to th
 
 ## Changelog
 
+### 1.2.3
+
+- Add BlogLogistics plugin icon assets.
+- Add icon metadata to the generated update manifest.
+
 ### 1.2.2
 
 - Move settings from Settings > Remove Comment Feed to BlogLogistics > Remove Comment Feed.

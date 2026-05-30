@@ -3,7 +3,7 @@
  * Plugin Name:       BlogLogistics Remove Comment Feed
  * Plugin URI:        https://github.com/bloglogisticsdev/bloglogistics-remove-comment-feed
  * Description:       Removes comment feed links and blocks direct access to WordPress comment feed URLs while leaving normal post feeds available.
- * Version:           1.2.2
+ * Version:           1.2.3
  * Requires at least: 7.0
  * Requires PHP:      8.3
  * Author:            BlogLogistics
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BLOGLOGISTICS_RCF_VERSION', '1.2.2' );
+define( 'BLOGLOGISTICS_RCF_VERSION', '1.2.3' );
 define( 'BLOGLOGISTICS_RCF_SLUG', 'bloglogistics-remove-comment-feed' );
 define( 'BLOGLOGISTICS_RCF_FILE', __FILE__ );
 define( 'BLOGLOGISTICS_RCF_DIR', plugin_dir_path( __FILE__ ) );
