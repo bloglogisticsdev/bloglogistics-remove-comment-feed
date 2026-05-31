@@ -26,6 +26,11 @@ The plugin does not create public pages and does not add replacement links to th
 
 ## Changelog
 
+### 1.2.4
+
+- Add BlogLogistics plugin banner assets.
+- Add banner metadata to the generated update manifest.
+
 ### 1.2.3
 
 - Add BlogLogistics plugin icon assets.
