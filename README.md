@@ -24,7 +24,41 @@ The plugin does not create public pages and does not add replacement links to th
 - Reset the blocked-feed message to the default.
 - Uses the BlogLogistics manifest update system.
 
+## Installation
+
+1. Upload the plugin folder to `/wp-content/plugins/` or install the ZIP through WordPress.
+2. Activate the plugin.
+3. Go to **BlogLogistics > Remove Comment Feed**.
+4. Confirm that comment feeds are disabled and customize the blocked-feed message if needed.
+
+## FAQ
+
+### Does this disable normal WordPress feeds?
+
+No. This plugin blocks comment feeds only. Normal post, category, tag, and author feeds remain available.
+
+### What happens when someone visits a comment feed URL directly?
+
+They see the blocked-feed message configured under **BlogLogistics > Remove Comment Feed**.
+
+### Can I customize the blocked-feed message?
+
+Yes. Go to **BlogLogistics > Remove Comment Feed** and edit the message shown when someone opens a blocked comment feed URL.
+
+### Does this plugin create public pages or replacement links?
+
+No. It removes comment feed links and blocks comment feed URLs. It does not create public pages or add replacement links.
+
+### Does this plugin use the BlogLogistics update system?
+
+Yes. Updates are served through the BlogLogistics manifest-based update system.
+
 ## Changelog
+
+### 1.2.5
+
+- Add Installation and FAQ metadata to the plugin details modal.
+- Add linked BlogLogistics author metadata to the generated update manifest.
 
 ### 1.2.4
 

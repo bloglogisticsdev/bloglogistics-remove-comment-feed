@@ -4,7 +4,7 @@ Tags: comments, feeds, rss, atom, privacy
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 1.2.4
+Stable tag: 1.2.5
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -34,7 +34,28 @@ The plugin does not create public pages and does not add replacement links to th
 3. Go to BlogLogistics > Remove Comment Feed.
 4. Confirm that comment feeds are disabled and customize the blocked-feed message if needed.
 
+== Frequently Asked Questions ==
+
+= Does this disable normal WordPress feeds? =
+No. This plugin blocks comment feeds only. Normal post, category, tag, and author feeds remain available.
+
+= What happens when someone visits a comment feed URL directly? =
+They see the blocked-feed message configured under BlogLogistics > Remove Comment Feed.
+
+= Can I customize the blocked-feed message? =
+Yes. Go to BlogLogistics > Remove Comment Feed and edit the message shown when someone opens a blocked comment feed URL.
+
+= Does this plugin create public pages or replacement links? =
+No. It removes comment feed links and blocks comment feed URLs. It does not create public pages or add replacement links.
+
+= Does this plugin use the BlogLogistics update system? =
+Yes. Updates are served through the BlogLogistics manifest-based update system.
+
 == Changelog ==
+
+= 1.2.5 =
+* Add Installation and FAQ metadata to the plugin details modal.
+* Add linked BlogLogistics author metadata to the generated update manifest.
 
 = 1.2.4 =
 * Add BlogLogistics plugin banner assets.

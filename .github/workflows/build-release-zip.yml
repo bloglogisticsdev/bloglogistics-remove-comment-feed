@@ -123,6 +123,8 @@ jobs:
               "tested": "7.0",
               "requires_php": "8.3",
               "last_updated": last_updated,
+              "author": '<a href="https://www.bloglogistics.com" target="_blank" rel="noopener noreferrer">BlogLogistics</a>',
+              "author_profile": "https://www.bloglogistics.com",
               "icons": {
                   "1x": "https://updates.bloglogistics.com/plugins/assets/icon-128x128.png",
                   "2x": "https://updates.bloglogistics.com/plugins/assets/icon-256x256.png",
@@ -135,6 +137,8 @@ jobs:
               },
               "sections": {
                   "description": "Removes comment feed links and blocks direct access to WordPress comment feed URLs while leaving normal post feeds available.",
+                  "installation": "<ol><li>Upload the plugin folder to <code>/wp-content/plugins/</code> or install the ZIP through WordPress.</li><li>Activate the plugin.</li><li>Go to <strong>BlogLogistics &gt; Remove Comment Feed</strong>.</li><li>Confirm that comment feeds are disabled and customize the blocked-feed message if needed.</li></ol>",
+                  "faq": "<h4>Does this disable normal WordPress feeds?</h4><p>No. This plugin blocks comment feeds only. Normal post, category, tag, and author feeds remain available.</p><h4>What happens when someone visits a comment feed URL directly?</h4><p>They see the blocked-feed message configured under <strong>BlogLogistics &gt; Remove Comment Feed</strong>.</p><h4>Can I customize the blocked-feed message?</h4><p>Yes. Go to <strong>BlogLogistics &gt; Remove Comment Feed</strong> and edit the message shown when someone opens a blocked comment feed URL.</p><h4>Does this plugin create public pages or replacement links?</h4><p>No. It removes comment feed links and blocks comment feed URLs. It does not create public pages or add replacement links.</p><h4>Does this plugin use the BlogLogistics update system?</h4><p>Yes. Updates are served through the BlogLogistics manifest-based update system.</p>",
                   "changelog": changelog_html,
               },
           }
