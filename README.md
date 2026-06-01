@@ -55,6 +55,16 @@ Yes. Updates are served through the BlogLogistics manifest-based update system.
 
 ## Changelog
 
+### 1.3.0
+
+- Refactor the main plugin file into a bootstrap loader.
+- Move the main plugin class into the includes directory.
+- Add translation support and bundled language files.
+- Add language files for English Australia, English Great Britain, French, German, Spanish, Norwegian Bokmål, Swedish, and Japanese.
+- Add Domain Path metadata for bundled language files.
+- Add uninstall cleanup for this plugin’s saved settings.
+- Preserve update metadata, including icons, banners, Installation, FAQ, Author, and changelog support.
+
 ### 1.2.5
 
 - Add Installation and FAQ metadata to the plugin details modal.

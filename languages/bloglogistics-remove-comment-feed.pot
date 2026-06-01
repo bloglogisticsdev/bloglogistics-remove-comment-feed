@@ -1,0 +1,54 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: BlogLogistics Remove Comment Feed 1.3.0\n"
+"Report-Msgid-Bugs-To: https://www.bloglogistics.com\n"
+"POT-Creation-Date: 2026-06-01 00:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: bloglogistics-remove-comment-feed\n"
+
+msgid "Comment Feed Settings"
+msgstr ""
+
+msgid "Disable comment feeds"
+msgstr ""
+
+msgid "Message shown for blocked comment feeds"
+msgstr ""
+
+msgid "BlogLogistics Remove Comment Feed"
+msgstr ""
+
+msgid "Remove Comment Feed"
+msgstr ""
+
+msgid "BlogLogistics"
+msgstr ""
+
+msgid "Use the BlogLogistics submenu items to manage installed BlogLogistics plugins."
+msgstr ""
+
+msgid "Remove comment feed links from your site and block direct access to comment feed URLs. Normal post feeds are not affected."
+msgstr ""
+
+msgid "Stop visitors and bots from accessing comment RSS/Atom feeds."
+msgstr ""
+
+msgid "This message is shown only if someone manually visits a comment feed URL, such as /comments/feed/. It does not create a page and it does not add any new links to your site."
+msgstr ""
+
+msgid "Reset message to default"
+msgstr ""
+
+msgid "Restores the default message shown when someone visits a blocked comment feed URL."
+msgstr ""
+
+msgid "You do not have permission to access this page."
+msgstr ""
+
+msgid "Comment Feed Disabled"
+msgstr ""
+
+msgid "Comment feeds are not available on this website."
+msgstr ""
