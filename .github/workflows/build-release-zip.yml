@@ -73,46 +73,130 @@ jobs:
           readme_path = Path("readme.txt")
           readme = readme_path.read_text(encoding="utf-8", errors="replace")
 
-          changelog_match = re.search(
-              r"^==\s*Changelog\s*==\s*(.*?)(?=^==\s+|\Z)",
-              readme,
-              flags=re.IGNORECASE | re.MULTILINE | re.DOTALL,
-          )
+          def extract_readme_section(readme_text, section_name):
+              section_match = re.search(
+                  rf"^==\s*{re.escape(section_name)}\s*==\s*(.*?)(?=^==\s+|\Z)",
+                  readme_text,
+                  flags=re.IGNORECASE | re.MULTILINE | re.DOTALL,
+              )
+              return section_match.group(1).strip() if section_match else ""
 
-          changelog_text = changelog_match.group(1).strip() if changelog_match else ""
+          def convert_inline_markup(text):
+              escaped = html.escape(text.strip())
+              escaped = re.sub(r"`([^`]+)`", r"<code>\1</code>", escaped)
+              return escaped
 
-          html_parts = []
-          current_items = []
+          def convert_ordered_list_to_html(section_text):
+              items = []
+              paragraphs = []
 
-          def flush_items():
-              nonlocal_items = list(current_items)
-              current_items.clear()
-              if nonlocal_items:
-                  html_parts.append("<ul>")
-                  for item in nonlocal_items:
-                      html_parts.append(f"<li>{html.escape(item)}</li>")
-                  html_parts.append("</ul>")
+              for raw_line in section_text.splitlines():
+                  line = raw_line.strip()
+                  if not line:
+                      continue
 
-          for raw_line in changelog_text.splitlines():
-              line = raw_line.strip()
-              if not line:
-                  continue
+                  item_match = re.match(r"^\d+\.\s+(.*)$", line)
+                  if item_match:
+                      items.append(convert_inline_markup(item_match.group(1)))
+                      continue
 
-              version_heading = re.match(r"^=\s*(.*?)\s*=$", line)
-              if version_heading:
-                  flush_items()
-                  html_parts.append(f"<h4>{html.escape(version_heading.group(1))}</h4>")
-                  continue
+                  paragraphs.append(convert_inline_markup(line))
 
-              if line.startswith("*"):
-                  current_items.append(line.lstrip("*").strip())
-                  continue
+              html_parts = []
 
-              current_items.append(line)
+              if items:
+                  html_parts.append("<ol>")
+                  for item in items:
+                      html_parts.append(f"<li>{item}</li>")
+                  html_parts.append("</ol>")
 
-          flush_items()
+              for paragraph in paragraphs:
+                  html_parts.append(f"<p>{paragraph}</p>")
 
-          changelog_html = "".join(html_parts) if html_parts else "<p>No changelog available.</p>"
+              return "".join(html_parts) if html_parts else "<p>No installation instructions available.</p>"
+
+          def convert_faq_to_html(faq_text):
+              html_parts = []
+              current_question = None
+              current_answer = []
+
+              def flush_question():
+                  nonlocal current_question, current_answer
+
+                  if not current_question:
+                      return
+
+                  answer = " ".join(line.strip() for line in current_answer if line.strip())
+                  html_parts.append(f"<h4>{convert_inline_markup(current_question)}</h4>")
+
+                  if answer:
+                      html_parts.append(f"<p>{convert_inline_markup(answer)}</p>")
+                  else:
+                      html_parts.append("<p></p>")
+
+                  current_question = None
+                  current_answer = []
+
+              for raw_line in faq_text.splitlines():
+                  line = raw_line.strip()
+
+                  if not line:
+                      continue
+
+                  question_match = re.match(r"^=\s*(.*?)\s*=$", line)
+                  if question_match:
+                      flush_question()
+                      current_question = question_match.group(1).strip()
+                      current_answer = []
+                      continue
+
+                  current_answer.append(line)
+
+              flush_question()
+
+              return "".join(html_parts) if html_parts else "<p>No FAQ available.</p>"
+
+          def convert_changelog_to_html(changelog_text):
+              html_parts = []
+              current_items = []
+
+              def flush_items():
+                  nonlocal current_items
+                  if current_items:
+                      html_parts.append("<ul>")
+                      for item in current_items:
+                          html_parts.append(f"<li>{convert_inline_markup(item)}</li>")
+                      html_parts.append("</ul>")
+                      current_items = []
+
+              for raw_line in changelog_text.splitlines():
+                  line = raw_line.strip()
+                  if not line:
+                      continue
+
+                  version_heading = re.match(r"^=\s*(.*?)\s*=$", line)
+                  if version_heading:
+                      flush_items()
+                      html_parts.append(f"<h4>{convert_inline_markup(version_heading.group(1))}</h4>")
+                      continue
+
+                  if line.startswith("*"):
+                      current_items.append(line.lstrip("*").strip())
+                      continue
+
+                  current_items.append(line)
+
+              flush_items()
+
+              return "".join(html_parts) if html_parts else "<p>No changelog available.</p>"
+
+          installation_text = extract_readme_section(readme, "Installation")
+          faq_text = extract_readme_section(readme, "Frequently Asked Questions")
+          changelog_text = extract_readme_section(readme, "Changelog")
+
+          installation_html = convert_ordered_list_to_html(installation_text)
+          faq_html = convert_faq_to_html(faq_text)
+          changelog_html = convert_changelog_to_html(changelog_text)
 
           manifest = {
               "name": plugin_name,
@@ -137,8 +221,8 @@ jobs:
               },
               "sections": {
                   "description": "Removes comment feed links and blocks direct access to WordPress comment feed URLs while leaving normal post feeds available.",
-                  "installation": "<ol><li>Upload the plugin folder to <code>/wp-content/plugins/</code> or install the ZIP through WordPress.</li><li>Activate the plugin.</li><li>Go to <strong>BlogLogistics &gt; Remove Comment Feed</strong>.</li><li>Confirm that comment feeds are disabled and customize the blocked-feed message if needed.</li></ol>",
-                  "faq": "<h4>Does this disable normal WordPress feeds?</h4><p>No. This plugin blocks comment feeds only. Normal post, category, tag, and author feeds remain available.</p><h4>What happens when someone visits a comment feed URL directly?</h4><p>They see the blocked-feed message configured under <strong>BlogLogistics &gt; Remove Comment Feed</strong>.</p><h4>Can I customize the blocked-feed message?</h4><p>Yes. Go to <strong>BlogLogistics &gt; Remove Comment Feed</strong> and edit the message shown when someone opens a blocked comment feed URL.</p><h4>Does this plugin create public pages or replacement links?</h4><p>No. It removes comment feed links and blocks comment feed URLs. It does not create public pages or add replacement links.</p><h4>Does this plugin use the BlogLogistics update system?</h4><p>Yes. Updates are served through the BlogLogistics manifest-based update system.</p>",
+                  "installation": installation_html,
+                  "faq": faq_html,
                   "changelog": changelog_html,
               },
           }
