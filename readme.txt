@@ -2,9 +2,9 @@
 Contributors: bloglogistics
 Tags: comments, feeds, rss, atom, privacy
 Requires at least: 7.0
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.2
+Stable tag: 1.4.0
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -14,7 +14,7 @@ Removes comment feed links and blocks direct access to WordPress comment feed UR
 
 BlogLogistics Remove Comment Feed disables WordPress comment RSS/Atom feeds without disabling normal post feeds.
 
-The plugin removes comment feed links from the site HTML head, blocks direct access to comment feed URLs such as `/comments/feed/`, and lets administrators customize the message shown to visitors who manually open a blocked comment feed URL.
+The plugin removes comment feed links from the site HTML head, blocks direct access to comment feed URLs such as `/comments/feed/`, and lets administrators customise the message shown to visitors who manually open a blocked comment feed URL.
 
 The plugin does not create public pages and does not add replacement links to the site.
 
@@ -23,8 +23,11 @@ The plugin does not create public pages and does not add replacement links to th
 * Disable comment RSS/Atom feeds.
 * Remove comment feed links from the site HTML head.
 * Leave normal post, category, tag, and author feeds available.
-* Customize the message shown when someone visits a blocked comment feed URL.
+* Customise the message shown when someone visits a blocked comment feed URL.
 * Reset the blocked-feed message to the default.
+* Choose a 404 Not Found or 410 Gone response for blocked comment feeds.
+* View the current comment-feed status and test comment and normal feeds from wp-admin.
+* Open plugin settings directly from the Plugins screen.
 * Uses the BlogLogistics manifest update system.
 
 == BlogLogistics Service Usage Notice ==
@@ -40,7 +43,8 @@ This notice does not restrict any rights granted under the GPL-3.0-or-later lice
 1. Upload the plugin folder to `/wp-content/plugins/` or install the ZIP through WordPress.
 2. Activate the plugin.
 3. Go to BlogLogistics > Remove Comment Feed.
-4. Confirm that comment feeds are disabled and customize the blocked-feed message if needed.
+4. Confirm that comment feeds are disabled, choose the preferred HTTP response, and customise the blocked-feed message if needed.
+5. Use the Feed Status & Tests section to verify the blocked comment feed and normal WordPress feed.
 
 == Frequently Asked Questions ==
 
@@ -48,10 +52,13 @@ This notice does not restrict any rights granted under the GPL-3.0-or-later lice
 No. This plugin blocks comment feeds only. Normal post, category, tag, and author feeds remain available.
 
 = What happens when someone visits a comment feed URL directly? =
-They see the blocked-feed message configured under BlogLogistics > Remove Comment Feed.
+They see the blocked-feed message configured under BlogLogistics > Remove Comment Feed. The response uses the selected 404 Not Found or 410 Gone status code.
 
-= Can I customize the blocked-feed message? =
+= Can I customise the blocked-feed message? =
 Yes. Go to BlogLogistics > Remove Comment Feed and edit the message shown when someone opens a blocked comment feed URL.
+
+= How can I verify that the plugin is working? =
+Go to BlogLogistics > Remove Comment Feed and use the Feed Status & Tests section. It includes links for testing both the comment feed and the normal WordPress feed.
 
 = Does this plugin create public pages or replacement links? =
 No. It removes comment feed links and blocks comment feed URLs. It does not create public pages or add replacement links.
@@ -64,6 +71,14 @@ Yes. Updates are served through the BlogLogistics manifest-based update system.
 This plugin is licensed under GPL-3.0-or-later. BlogLogistics service use, support, updates, configuration assistance, or replacement work may require an active BlogLogistics hosting, maintenance, or site-management service, or a separate agreement. This notice does not restrict any rights granted under the GPL-3.0-or-later licence.
 
 == Changelog ==
+
+= 1.4.0 =
+* Add a current status indicator for comment feed blocking.
+* Add one-click tests for the comment feed and normal WordPress feed.
+* Add a selectable 404 Not Found or 410 Gone response for blocked comment feeds.
+* Add a Settings shortcut on the WordPress Plugins screen.
+* Update WordPress compatibility metadata to Tested up to 7.1.
+* Update the release workflow so generated update manifests report WordPress 7.1 compatibility.
 
 = 1.3.2 =
 * Generate the update manifest Installation section from readme.txt.
@@ -103,7 +118,7 @@ This plugin is licensed under GPL-3.0-or-later. BlogLogistics service use, suppo
 * Add the BlogLogistics manifest-based updater.
 * Add automated GitHub Actions release ZIP and manifest upload workflow.
 * Add a clear wp-admin settings page under BlogLogistics > Remove Comment Feed.
-* Add a customizable message for blocked comment feed URLs.
+* Add a customisable message for blocked comment feed URLs.
 * Add a reset button for restoring the default blocked-feed message.
 * Remove comment feed links from wp_head without disabling normal post feeds.
 * Block direct comment feed requests while leaving normal feeds available.

@@ -20,6 +20,8 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 
 		private const DEFAULT_MESSAGE = 'Comment feeds are not available on this website.';
 
+		private const DEFAULT_RESPONSE_CODE = 404;
+
 		/**
 		 * Whether wp_head output buffering is currently active.
 		 *
@@ -34,6 +36,7 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 			add_action( 'admin_init', array( $this, 'register_settings' ) );
 			add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 			add_action( 'admin_post_bloglogistics_rcf_reset_message', array( $this, 'handle_reset_message' ) );
+			add_filter( 'plugin_action_links_' . plugin_basename( BLOGLOGISTICS_RCF_FILE ), array( $this, 'add_plugin_action_links' ) );
 
 			if ( ! $this->is_enabled() ) {
 				return;
@@ -56,8 +59,9 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 		 */
 		private function defaults(): array {
 			return array(
-				'enabled' => true,
-				'message' => self::DEFAULT_MESSAGE,
+				'enabled'       => true,
+				'message'       => self::DEFAULT_MESSAGE,
+				'response_code' => self::DEFAULT_RESPONSE_CODE,
 			);
 		}
 
@@ -96,6 +100,16 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 		}
 
 		/**
+		 * HTTP response code used for blocked comment feeds.
+		 */
+		private function get_response_code(): int {
+			$options       = $this->get_options();
+			$response_code = isset( $options['response_code'] ) ? absint( $options['response_code'] ) : self::DEFAULT_RESPONSE_CODE;
+
+			return in_array( $response_code, array( 404, 410 ), true ) ? $response_code : self::DEFAULT_RESPONSE_CODE;
+		}
+
+		/**
 		 * Register settings.
 		 */
 		public function register_settings(): void {
@@ -126,6 +140,14 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 			);
 
 			add_settings_field(
+				'bloglogistics_rcf_response_code',
+				esc_html__( 'Blocked feed HTTP response', 'bloglogistics-remove-comment-feed' ),
+				array( $this, 'render_response_code_field' ),
+				'bloglogistics_rcf',
+				'bloglogistics_rcf_main_section'
+			);
+
+			add_settings_field(
 				'bloglogistics_rcf_message',
 				esc_html__( 'Message shown for blocked comment feeds', 'bloglogistics-remove-comment-feed' ),
 				array( $this, 'render_message_field' ),
@@ -146,9 +168,16 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 			$message = isset( $input['message'] ) ? sanitize_textarea_field( wp_unslash( $input['message'] ) ) : self::DEFAULT_MESSAGE;
 			$message = trim( $message );
 
+			$response_code = isset( $input['response_code'] ) ? absint( $input['response_code'] ) : self::DEFAULT_RESPONSE_CODE;
+
+			if ( ! in_array( $response_code, array( 404, 410 ), true ) ) {
+				$response_code = self::DEFAULT_RESPONSE_CODE;
+			}
+
 			return array(
-				'enabled' => ! empty( $input['enabled'] ),
-				'message' => '' !== $message ? $message : self::DEFAULT_MESSAGE,
+				'enabled'       => ! empty( $input['enabled'] ),
+				'message'       => '' !== $message ? $message : self::DEFAULT_MESSAGE,
+				'response_code' => $response_code,
 			);
 		}
 
@@ -166,6 +195,21 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 				'bloglogistics-remove-comment-feed',
 				array( $this, 'render_settings_page' )
 			);
+		}
+
+		/**
+		 * Add a Settings shortcut on the Plugins screen.
+		 *
+		 * @param array<int|string, string> $links Existing plugin action links.
+		 * @return array<int|string, string>
+		 */
+		public function add_plugin_action_links( array $links ): array {
+			$settings_url  = admin_url( 'admin.php?page=bloglogistics-remove-comment-feed' );
+			$settings_link = '<a href="' . esc_url( $settings_url ) . '">' . esc_html__( 'Settings', 'bloglogistics-remove-comment-feed' ) . '</a>';
+
+			array_unshift( $links, $settings_link );
+
+			return $links;
 		}
 
 		/**
@@ -242,6 +286,22 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 		}
 
 		/**
+		 * Render HTTP response code field.
+		 */
+		public function render_response_code_field(): void {
+			$response_code = $this->get_response_code();
+			?>
+			<select id="bloglogistics_rcf_response_code" name="<?php echo esc_attr( self::OPTION_NAME ); ?>[response_code]">
+				<option value="404" <?php selected( 404, $response_code ); ?>><?php esc_html_e( '404 Not Found', 'bloglogistics-remove-comment-feed' ); ?></option>
+				<option value="410" <?php selected( 410, $response_code ); ?>><?php esc_html_e( '410 Gone', 'bloglogistics-remove-comment-feed' ); ?></option>
+			</select>
+			<p class="description">
+				<?php esc_html_e( 'Use 404 for the existing behaviour, or 410 to tell crawlers that comment feeds have been intentionally removed.', 'bloglogistics-remove-comment-feed' ); ?>
+			</p>
+			<?php
+		}
+
+		/**
 		 * Render message field.
 		 */
 		public function render_message_field(): void {
@@ -262,9 +322,14 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 			if ( ! current_user_can( 'manage_options' ) ) {
 				return;
 			}
+
+			$comment_feed_url = get_feed_link( 'comments_' . get_default_feed() );
+			$normal_feed_url  = get_feed_link();
 			?>
 			<div class="wrap">
 				<h1><?php esc_html_e( 'BlogLogistics Remove Comment Feed', 'bloglogistics-remove-comment-feed' ); ?></h1>
+
+				<?php $this->render_feed_status(); ?>
 
 				<form method="post" action="options.php">
 					<?php
@@ -273,6 +338,22 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 					submit_button();
 					?>
 				</form>
+
+				<hr />
+
+				<h2><?php esc_html_e( 'Feed Status & Tests', 'bloglogistics-remove-comment-feed' ); ?></h2>
+				<p><?php esc_html_e( 'Open these links in a new tab to verify the current feed behaviour.', 'bloglogistics-remove-comment-feed' ); ?></p>
+				<p>
+					<a class="button button-secondary" href="<?php echo esc_url( $comment_feed_url ); ?>" target="_blank" rel="noopener noreferrer">
+						<?php esc_html_e( 'Test comment feed', 'bloglogistics-remove-comment-feed' ); ?>
+					</a>
+					<a class="button button-secondary" href="<?php echo esc_url( $normal_feed_url ); ?>" target="_blank" rel="noopener noreferrer">
+						<?php esc_html_e( 'Test normal feed', 'bloglogistics-remove-comment-feed' ); ?>
+					</a>
+				</p>
+				<p class="description">
+					<?php esc_html_e( 'When blocking is enabled, the comment feed should show the configured blocked-feed message while the normal WordPress feed remains available.', 'bloglogistics-remove-comment-feed' ); ?>
+				</p>
 
 				<hr />
 
@@ -289,6 +370,31 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 		}
 
 		/**
+		 * Render the current comment-feed status indicator.
+		 */
+		private function render_feed_status(): void {
+			if ( $this->is_enabled() ) {
+				?>
+				<div class="notice notice-success inline">
+					<p>
+						<strong><?php esc_html_e( 'Comment feeds are currently disabled.', 'bloglogistics-remove-comment-feed' ); ?></strong>
+						<?php echo ' '; ?><?php esc_html_e( 'Normal WordPress feeds remain available.', 'bloglogistics-remove-comment-feed' ); ?>
+					</p>
+				</div>
+				<?php
+				return;
+			}
+			?>
+			<div class="notice notice-warning inline">
+				<p>
+					<strong><?php esc_html_e( 'Comment feeds are currently enabled.', 'bloglogistics-remove-comment-feed' ); ?></strong>
+					<?php echo ' '; ?><?php esc_html_e( 'Enable blocking below to remove comment feed links and block direct comment feed requests.', 'bloglogistics-remove-comment-feed' ); ?>
+				</p>
+			</div>
+			<?php
+		}
+
+		/**
 		 * Reset the blocked-feed message to the default.
 		 */
 		public function handle_reset_message(): void {
@@ -298,7 +404,7 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 
 			check_admin_referer( 'bloglogistics_rcf_reset_message' );
 
-			$options = $this->get_options();
+			$options            = $this->get_options();
 			$options['message'] = self::DEFAULT_MESSAGE;
 			update_option( self::OPTION_NAME, $options );
 
@@ -316,7 +422,7 @@ if ( ! class_exists( 'BlogLogistics_Remove_Comment_Feed', false ) ) {
 				$message_html,
 				esc_html__( 'Comment Feed Disabled', 'bloglogistics-remove-comment-feed' ),
 				array(
-					'response' => 404,
+					'response' => $this->get_response_code(),
 				)
 			);
 		}

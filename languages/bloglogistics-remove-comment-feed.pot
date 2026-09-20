@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: BlogLogistics Remove Comment Feed 1.3.0\n"
+"Project-Id-Version: BlogLogistics Remove Comment Feed 1.4.0\n"
 "Report-Msgid-Bugs-To: https://www.bloglogistics.com\n"
-"POT-Creation-Date: 2026-06-01 00:00+0000\n"
+"POT-Creation-Date: 2026-09-20 00:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -51,4 +51,46 @@ msgid "Comment Feed Disabled"
 msgstr ""
 
 msgid "Comment feeds are not available on this website."
+msgstr ""
+
+msgid "Blocked feed HTTP response"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "404 Not Found"
+msgstr ""
+
+msgid "410 Gone"
+msgstr ""
+
+msgid "Use 404 for the existing behaviour, or 410 to tell crawlers that comment feeds have been intentionally removed."
+msgstr ""
+
+msgid "Feed Status & Tests"
+msgstr ""
+
+msgid "Open these links in a new tab to verify the current feed behaviour."
+msgstr ""
+
+msgid "Test comment feed"
+msgstr ""
+
+msgid "Test normal feed"
+msgstr ""
+
+msgid "When blocking is enabled, the comment feed should show the configured blocked-feed message while the normal WordPress feed remains available."
+msgstr ""
+
+msgid "Comment feeds are currently disabled."
+msgstr ""
+
+msgid "Normal WordPress feeds remain available."
+msgstr ""
+
+msgid "Comment feeds are currently enabled."
+msgstr ""
+
+msgid "Enable blocking below to remove comment feed links and block direct comment feed requests."
 msgstr ""
